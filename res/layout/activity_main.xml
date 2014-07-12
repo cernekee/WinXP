@@ -28,7 +28,7 @@
      	    <TextView
 	            android:padding="20dp"
      	        android:background="@drawable/cell_shape"
-	            android:text="getSystemService()"
+	            android:text="pre-nuke"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:textStyle="bold" />
@@ -36,7 +36,7 @@
 	        <TextView
 	            android:padding="20dp"
 	            android:background="@drawable/cell_shape"
-	            android:text="Reflection"
+	            android:text="post-nuke"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:textStyle="bold" />
@@ -124,6 +124,33 @@
 
 	    </TableRow>
      		    
-	</TableLayout>
+     	<TableRow
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content" >
+        
+	        <TextView
+	            android:padding="20dp"
+	            android:background="@drawable/cell_shape"
+	            android:text="Wifi MAC"
+	            android:layout_width="match_parent"
+	            android:layout_height="match_parent" />
+
+			<TextView
+	            android:padding="20dp"
+	            android:background="@drawable/cell_shape"
+	            android:id="@+id/mac_0"
+	            android:layout_width="match_parent"
+	            android:layout_height="match_parent" />
+	
+	        <TextView
+	            android:padding="20dp"
+	            android:background="@drawable/cell_shape"
+	            android:id="@+id/mac_1"
+	            android:layout_width="match_parent"
+	            android:layout_height="match_parent" />
+
+	    </TableRow>
+     		    
+     		</TableLayout>
     
 </ScrollView>

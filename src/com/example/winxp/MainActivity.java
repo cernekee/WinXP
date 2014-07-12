@@ -1,5 +1,5 @@
 /*
- * Win XPrivacy: Bypassing XPrivacy hooks using reflection
+ * Win XPrivacy: Bypassing XPrivacy hooks using JNI
  *
  * Copyright (c) 2014, Kevin Cernekee <cernekee@gmail.com>
  *
@@ -16,20 +16,13 @@
 
 package com.example.winxp;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
-import com.android.internal.telephony.IPhoneSubInfo;
-
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.accounts.IAccountManager;
 import android.app.Activity;
 import android.content.Context;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.Menu;
 import android.widget.TextView;
 
@@ -63,39 +56,39 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        if (!Native.init() ||
+        		!Native.getMagic().equals("some magic string that XPrivacy will never guess")) {
+        	throw new IllegalArgumentException("error initializing native library; reboot and try again");
+        }
+        
+        TelephonyManager tm;
+        AccountManager am;
+        WifiManager wm;
+
+        tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         writeField(R.id.imei_0, tm.getDeviceId());
         writeField(R.id.num_0, tm.getLine1Number());
-        
-        String imei = "ERROR";
-        String num = "ERROR";
-        try {
-        	Class<?> sm = Class.forName("android.os.ServiceManager");
-        	Method getService = sm.getMethod("getService", String.class);
-        	IBinder serv = (IBinder)getService.invoke(null, "iphonesubinfo");
-        	IPhoneSubInfo sub = IPhoneSubInfo.Stub.asInterface(serv);
-        	imei = sub.getDeviceId();
-        	num = sub.getLine1Number();
-        } catch (Exception e) {
-        	Log.e(TAG, "Error invoking getSubscriberInfo via reflection", e);
-        }
-        writeField(R.id.imei_1, imei);
-        writeField(R.id.num_1, num);
-        
-        AccountManager am = (AccountManager)getSystemService(Context.ACCOUNT_SERVICE);
-        String acctinfo = listAccounts(am.getAccounts());
-        writeField(R.id.acct_0, acctinfo);
 
-        try {
-        	Field f = AccountManager.class.getDeclaredField("mService");
-        	f.setAccessible(true);
-        	IAccountManager intf = (IAccountManager)f.get(am);
-        	acctinfo = listAccounts(intf.getAccounts(null));
-        } catch (Exception e) {
-        	acctinfo = "ERROR";
-        	Log.e(TAG, "Error invoking getAccounts via reflection", e);
-        }
-        writeField(R.id.acct_1, acctinfo);
+        am = (AccountManager)getSystemService(Context.ACCOUNT_SERVICE);
+        writeField(R.id.acct_0, listAccounts(am.getAccounts()));
+        
+        wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        writeField(R.id.mac_0, wm.getConnectionInfo().getMacAddress());
+
+        Native.nukeXposed("android/app/ContextImpl");
+        Native.nukeXposed("android/telephony/TelephonyManager");
+        Native.nukeXposed("android/accounts/AccountManager");
+        Native.nukeXposed("android/net/wifi/WifiManager");
+
+        tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        writeField(R.id.imei_1, tm.getDeviceId());
+        writeField(R.id.num_1, tm.getLine1Number());
+
+        am = (AccountManager)getSystemService(Context.ACCOUNT_SERVICE);
+        writeField(R.id.acct_1, listAccounts(am.getAccounts()));
+
+        wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        writeField(R.id.mac_1, wm.getConnectionInfo().getMacAddress());
     }
 
 

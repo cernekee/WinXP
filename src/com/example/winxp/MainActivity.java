@@ -55,12 +55,12 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        if (!Native.init() ||
-        		!Native.getMagic().equals("some magic string that XPrivacy will never guess")) {
+
+        // poison pill for JNI blockers (can be buried deep in the app)
+        if (!Native.getMagic().equals("some magic string that XPrivacy will never guess")) {
         	throw new IllegalArgumentException("error initializing native library; reboot and try again");
         }
-        
+
         TelephonyManager tm;
         AccountManager am;
         WifiManager wm;
@@ -75,10 +75,14 @@ public class MainActivity extends Activity {
         wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         writeField(R.id.mac_0, wm.getConnectionInfo().getMacAddress());
 
-        Native.nukeXposed("android/app/ContextImpl");
-        Native.nukeXposed("android/telephony/TelephonyManager");
-        Native.nukeXposed("android/accounts/AccountManager");
-        Native.nukeXposed("android/net/wifi/WifiManager");
+        // init() may return false on ART or on heavily customized versions of Dalvik,
+        // as the "dvm" symbols won't be found
+        if (Native.init() == true) {
+            Native.nukeXposed("android/app/ContextImpl");
+            Native.nukeXposed("android/telephony/TelephonyManager");
+            Native.nukeXposed("android/accounts/AccountManager");
+            Native.nukeXposed("android/net/wifi/WifiManager");
+        }
 
         tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         writeField(R.id.imei_1, tm.getDeviceId());
